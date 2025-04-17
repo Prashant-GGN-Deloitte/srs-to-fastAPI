@@ -10,12 +10,14 @@ This repository implements:
 - **Milestone 2**: Generation of a FastAPI project structure with directories and files.
 - **Milestone 3**: Autonomous coding of FastAPI routes, SQLAlchemy models, and unit tests.
 - **Milestone 6**: Generation of documentation, including an advanced Mermaid diagram visualizing the project generation workflow with dynamic endpoints, sub-nodes, and robust LLM-driven generation.
+- **Milestone 8**: FastAPI endpoint to accept SRS documents (.docx) and generate requirements and a FastAPI project.
 
 ## Repository Contents
 
 - `.gitignore`: Excludes sensitive files (e.g., `.env`, `venv/`, `generated_project/`).
 - `parse_srs.py`: Implements Milestone 1, analyzing SRS documents and generating `requirements.json`.
 - `generate_project.py`: Implements Milestones 2, 3, and 6, generating a FastAPI project structure, code, tests, and documentation with an advanced Mermaid diagram.
+- `main.py`: Implements Milestone 8, providing a FastAPI endpoint to accept SRS .docx files and generate requirements and a FastAPI project.
 - `requirements.txt`: Lists Python dependencies for the project.
 - `srs/`: Directory for input SRS `.docx` files (e.g., `Python Gen AI SRD backend 14th 18th Apr (1).docx`).
 - `outputs/`: Directory for generated `requirements.json`.
@@ -61,6 +63,7 @@ Follow these steps to set up the project on Windows:
    - `python-jose[cryptography]==3.3.0`
    - `passlib[bcrypt]==1.7.4`
    - `pytest==8.1.1`
+   - `python-multipart==0.0.9`
 
 4. **Set Up Environment Variables**: Create a `.env` file in the project root (`C:\Users\prastripathi\Desktop\srs-to-fastapi`) with your Groq API key:
 
@@ -288,12 +291,93 @@ graph TD
     C --> D[Generate Documentation]
 ```
 
+## Milestone 8: FastAPI Endpoint for SRS Input
+
+**Objective**: Expose a FastAPI service to accept SRS documents (.docx) and generate requirements and a FastAPI project using the LangGraph workflow.
+
+**Implementation** (`main.py`):
+
+- **Input**: A `.docx` SRS document uploaded via a FastAPI endpoint.
+- **Process**:
+  - Provides a `/generate-project/` endpoint that:
+    - Accepts a `.docx` file upload.
+    - Validates the file format (only `.docx` allowed).
+    - Saves the file temporarily and passes it to the LangGraph workflow in `parse_srs.py`.
+    - Generates `requirements.json` using the existing SRS analysis workflow.
+    - Uses `generate_project.py` to create a FastAPI project based on `requirements.json`.
+  - Includes a `/health` endpoint for service monitoring.
+- **Output**:
+  - `outputs/requirements.json` with structured requirements.
+  - `generated_project/` directory with the FastAPI project (if project generation is enabled).
+  - JSON response containing the parsed requirements and project output (file paths).
+- **Technologies**:
+  - FastAPI for the API service.
+  - LangGraph for workflow orchestration (via `parse_srs.py`).
+  - Python-Multipart for handling file uploads.
+  - LangChain with Groq’s Llama 3 (70B) for SRS analysis.
+
+**Usage**:
+
+1. Ensure all dependencies are installed and the `.env` file is configured (see Setup).
+
+2. Run the FastAPI service:
+
+   ```bash
+   python main.py
+   ```
+
+3. Test the endpoint using curl:
+
+   ```bash
+   curl -X POST -F "file=@path/to/srs.docx" http://localhost:8000/generate-project/
+   ```
+
+4. Access the Swagger UI at http://localhost:8000/docs for interactive testing.
+
+5. Check the outputs:
+
+   - `outputs/requirements.json` for parsed requirements.
+   - `generated_project/` for the generated FastAPI project (if enabled).
+
+**Example Response**:
+
+```json
+{
+  "status": "success",
+  "requirements": {
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/users",
+        "description": "Retrieve all users",
+        "parameters": {},
+        "response": {"type": "array", "items": {"type": "object"}}
+      }
+    ],
+    "database_schema": [
+      {
+        "name": "users",
+        "fields": [
+          {"name": "id", "type": "Integer", "constraints": "primary_key"}
+        ],
+        "relationships": []
+      }
+    ],
+    "auth_requirements": "JWT authentication",
+    "business_logic": "Users can manage leave requests"
+  },
+  "project_output": {
+    "main_py": "generated_project/main.py",
+    "requirements_txt": "generated_project/requirements.txt"
+  }
+}
+```
+
 ## Future Milestones
 
 - **Milestone 4**: Persistence and iterative improvements.
 - **Milestone 5**: Deployment via zip archive.
 - **Milestone 7**: LangSmith logging.
-- **Milestone 8**: FastAPI endpoint for SRS input.
 
 ## Contributing
 
