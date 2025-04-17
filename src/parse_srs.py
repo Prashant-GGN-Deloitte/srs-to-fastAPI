@@ -5,7 +5,7 @@ from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 from langgraph.graph import StateGraph
 from pydantic import BaseModel
-from typing import List, Dict, Annotated
+from typing import List, Dict
 from typing_extensions import TypedDict
 from dotenv import load_dotenv
 import json
@@ -47,8 +47,11 @@ class WorkflowState(TypedDict):
     state: GraphState
 
 # Node 1: Read SRS document
-def read_srs_node(state: WorkflowState) -> WorkflowState:
-    srs_path = "srs/Python Gen AI SRD backend 14th 18th Apr (1).docx"
+def read_srs_node(state: WorkflowState, config: dict) -> WorkflowState:
+    # Extract srs_path from config
+    srs_path = config.get("configurable", {}).get("srs_path")
+    if not srs_path:
+        raise ValueError("srs_path not provided in config")
     if not os.path.exists(srs_path):
         raise FileNotFoundError(f"SRS file not found at {srs_path}")
     
@@ -154,8 +157,15 @@ workflow.set_entry_point("read_srs")
 # Compile the workflow
 app = workflow.compile()
 
-# Run the workflow
-if __name__ == "__main__":
+# Function to run the workflow with a given SRS file path
+def run_workflow(srs_path: str) -> Requirements:
     initial_state = WorkflowState(state=GraphState())
-    result = app.invoke(initial_state)
+    # Pass srs_path in config
+    result = app.invoke(initial_state, config={"configurable": {"srs_path": srs_path}})
+    return result["state"].requirements
+
+if __name__ == "__main__":
+    # For testing locally with a hardcoded file
+    srs_path = "srs/Python Gen AI SRD backend 14th 18th Apr (1).docx"
+    requirements = run_workflow(srs_path)
     print("Requirements saved to outputs/requirements.json")
