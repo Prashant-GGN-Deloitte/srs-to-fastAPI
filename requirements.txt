@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg[binary]
+alembic
+python-jose[cryptography]
+passlib[bcrypt]
+python-docx
+langchain
+langgraph
+langchain-groq
+pydantic
+python-dotenv
+pytest
+langsmith

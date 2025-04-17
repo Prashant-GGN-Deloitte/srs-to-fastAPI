@@ -1,0 +1,25 @@
+# Python virtual environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Generated project files
+generated_project/
+generated_project.zip
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE files
+.vscode/
+.idea/
+
+# Other temporary files
+*.log
+*.cache
+outputs/
